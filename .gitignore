@@ -1,0 +1,4 @@
+# Argus local index (per-project SQLite + sidecars)
+.mcp-codebase.db
+.mcp-codebase.db-wal
+.mcp-codebase.db-shm
