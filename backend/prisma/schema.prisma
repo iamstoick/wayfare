@@ -1,0 +1,56 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+model User {
+  id          String      @id @default(uuid())
+  googleId    String      @unique
+  email       String      @unique
+  name        String
+  avatarUrl   String?
+  createdAt   DateTime    @default(now())
+  itineraries Itinerary[]
+}
+
+model Itinerary {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  centerLat Float
+  centerLng Float
+  radiusKm  Float
+  mode      String          @default("day") // 'day' | 'multi' | 'layover'
+  numDays   Int             @default(1)
+  startDate DateTime?
+  hotelLat  Float?
+  hotelLng  Float?
+  hotelName String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  items     ItineraryItem[]
+}
+
+model ItineraryItem {
+  id           String    @id @default(uuid())
+  itineraryId  String
+  itinerary    Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  osmId        String
+  name         String
+  category     String // 'tourist_spot' | 'restaurant'
+  lat          Float
+  lng          Float
+  address      String?
+  openingHours String?
+  isFree       Boolean   @default(true)
+  orderIndex   Int
+  visitTime    String? // e.g., "10:00 - 10:45"
+  dayIndex     Int      @default(1)
+}

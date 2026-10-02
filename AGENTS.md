@@ -15,3 +15,10 @@ This project is indexed by [Argus](https://github.com/iamstoick/argus)
 - Use `get_symbol_details` to read a symbol's source, `check_blast_radius`
   before refactoring, and `find_duplicates` / `find_dead_code` when
   cleaning up.
+
+## Project
+
+SpotHop travel-itinerary PWA. `backend/` = Express + Prisma API (`npm run dev`,
+port 5001). `frontend/` = React + Vite + Leaflet PWA (`npm run dev`, port
+5173). Full stack: `docker compose up --build`, web on
+http://localhost:4445. Never commit `.env` files.

@@ -2,3 +2,16 @@
 .mcp-codebase.db
 .mcp-codebase.db-wal
 .mcp-codebase.db-shm
+
+# Node
+node_modules/
+dist/
+build/
+
+# Env (examples are committed)
+.env
+.env.local
+
+# Misc
+.DS_Store
+*.log
