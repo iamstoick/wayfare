@@ -5,6 +5,7 @@ import { SearchBar } from '../components/SearchBar';
 import { FilterBar } from '../components/FilterBar';
 import { TripSettingsForm, defaultSettings, type TripSettings } from '../components/TripSettings';
 import { PlacesList } from '../components/PlacesList';
+import { RentalsList } from '../components/RentalsList';
 import { ItineraryPanel } from '../components/ItineraryPanel';
 import {
   api,
@@ -13,6 +14,8 @@ import {
   type Hotel,
   type ItineraryStop,
   type Place,
+  type Rental,
+  type RentalTypeFilter,
   type Trip,
 } from '../services/api';
 
@@ -25,7 +28,13 @@ interface LocationState {
   trip?: Trip;
 }
 
-type Tab = 'places' | 'itinerary';
+type Tab = 'places' | 'rentals' | 'itinerary';
+
+const VEHICLE_FILTERS: Array<{ value: RentalTypeFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'car', label: 'Car' },
+  { value: 'motorcycle', label: 'Motorcycle' },
+];
 
 export const HomePage: React.FC = () => {
   const location = useLocation();
@@ -34,11 +43,15 @@ export const HomePage: React.FC = () => {
   const [freeOnly, setFreeOnly] = useState(false);
   const [settings, setSettings] = useState<TripSettings>(defaultSettings);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [vehicleFilter, setVehicleFilter] = useState<RentalTypeFilter>('all');
   const [days, setDays] = useState<DayPlan[]>([]);
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [returnBy, setReturnBy] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('places');
   const [loadingPlaces, setLoadingPlaces] = useState(false);
+  const [loadingRentals, setLoadingRentals] = useState(false);
+  const [rentalsError, setRentalsError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [addingMeals, setAddingMeals] = useState(false);
   const [retimingDay, setRetimingDay] = useState<number | null>(null);
@@ -67,6 +80,20 @@ export const HomePage: React.FC = () => {
       setPlaces([]);
     } finally {
       setLoadingPlaces(false);
+    }
+  }, []);
+
+  const loadRentals = useCallback(async (target: Pin, radius: number) => {
+    setLoadingRentals(true);
+    setRentalsError(null);
+    try {
+      const { rentals } = await api.getRentals(target.lat, target.lng, radius);
+      setRentals(rentals);
+    } catch (err) {
+      setRentalsError((err as Error).message);
+      setRentals([]);
+    } finally {
+      setLoadingRentals(false);
     }
   }, []);
 
@@ -135,13 +162,17 @@ export const HomePage: React.FC = () => {
     setPin(next);
     resetPlan();
     void loadPlaces(next, radiusKm, freeOnly);
+    void loadRentals(next, radiusKm);
   };
 
   const handleSearchSelect = (hit: GeocodeHit) => handlePinSelect(hit.lat, hit.lng);
 
   const handleRadiusChange = (km: number) => {
     setRadiusKm(km);
-    if (pin) void loadPlaces(pin, km, freeOnly);
+    if (pin) {
+      void loadPlaces(pin, km, freeOnly);
+      void loadRentals(pin, km);
+    }
   };
 
   const handleFreeOnlyChange = (value: boolean) => {
@@ -262,6 +293,8 @@ export const HomePage: React.FC = () => {
   const spots = places.filter((p) => p.category === 'tourist_spot').length;
   const food = places.filter((p) => p.category === 'restaurant').length;
   const totalStops = days.reduce((n, d) => n + d.stops.length, 0);
+  const visibleRentals =
+    vehicleFilter === 'all' ? rentals : rentals.filter((r) => r.vehicleTypes.includes(vehicleFilter));
 
   return (
     <main className="layout">
@@ -305,6 +338,15 @@ export const HomePage: React.FC = () => {
           <button
             type="button"
             role="tab"
+            aria-selected={tab === 'rentals'}
+            className={tab === 'rentals' ? 'tab active' : 'tab'}
+            onClick={() => setTab('rentals')}
+          >
+            Rentals {rentals.length > 0 && `(${rentals.length})`}
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={tab === 'itinerary'}
             className={tab === 'itinerary' ? 'tab active' : 'tab'}
             onClick={() => setTab('itinerary')}
@@ -322,6 +364,31 @@ export const HomePage: React.FC = () => {
               </p>
             )}
             {!loadingPlaces && <PlacesList places={places} />}
+          </>
+        ) : tab === 'rentals' ? (
+          <>
+            <div className="segmented" role="tablist" aria-label="Vehicle type">
+              {VEHICLE_FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={vehicleFilter === f.value}
+                  className={vehicleFilter === f.value ? 'segment active' : 'segment'}
+                  onClick={() => setVehicleFilter(f.value)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            {loadingRentals && <p className="empty-note">Loading nearby rentals…</p>}
+            {!loadingRentals && rentalsError && <p className="error-note">{rentalsError}</p>}
+            {!loadingRentals && !rentalsError && visibleRentals.length > 0 && (
+              <p className="result-meta">
+                {visibleRentals.length} rentals within {radiusKm} km
+              </p>
+            )}
+            {!loadingRentals && !rentalsError && <RentalsList rentals={visibleRentals} />}
           </>
         ) : (
           <ItineraryPanel
@@ -344,6 +411,7 @@ export const HomePage: React.FC = () => {
           places={places}
           days={days}
           hotel={hotel}
+          rentals={rentals}
         />
       </section>
     </main>

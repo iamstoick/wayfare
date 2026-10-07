@@ -417,6 +417,53 @@ body {
   color: var(--blue-dark);
 }
 
+/* Rentals */
+
+.vehicle-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.badge-vehicle {
+  background: #e8effd;
+  color: #1d4ed8;
+}
+
+.rate-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rate-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.rate-value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rate-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rental-site {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-dark);
+}
+
 .offline-banner {
   margin: 0;
   font-size: 14px;
@@ -611,6 +658,10 @@ body {
 
 .map-dot-hotel {
   background: #1a1a1a;
+}
+
+.map-dot-rental {
+  background: #0d9488;
 }
 
 .map-number {

@@ -48,6 +48,31 @@ export interface Place {
   openNow: boolean | null;
 }
 
+export type RentalVehicleType = 'car' | 'motorcycle';
+export type RentalTypeFilter = 'all' | RentalVehicleType;
+
+export interface RentalEstimate {
+  vehicleType: RentalVehicleType;
+  label: string;
+  dailyMin: number;
+  dailyMax: number;
+  currency: string;
+}
+
+export interface Rental {
+  osmId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  vehicleTypes: RentalVehicleType[];
+  openingHours?: string;
+  phone?: string;
+  website?: string;
+  distanceKm: number;
+  openNow: boolean | null;
+  estimates: RentalEstimate[];
+}
+
 export interface ItineraryStop {
   id: string;
   name: string;
@@ -158,6 +183,11 @@ export const api = {
   getPlaces: (lat: number, lng: number, radiusKm: number, freeOnly: boolean) =>
     request<{ places: Place[] }>(
       `/places?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}&freeOnly=${freeOnly}`,
+    ),
+
+  getRentals: (lat: number, lng: number, radiusKm: number, type: RentalTypeFilter = 'all') =>
+    request<{ rentals: Rental[] }>(
+      `/rentals?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}&type=${type}`,
     ),
 
   enrich: (lat: number, lng: number, name: string) =>

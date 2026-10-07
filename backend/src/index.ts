@@ -4,6 +4,7 @@ import cors from 'cors';
 import { prisma } from './lib/prisma';
 import authRoutes from './routes/auth';
 import placesRoutes from './routes/places';
+import rentalsRoutes from './routes/rentals';
 import geocodeRoutes from './routes/geocode';
 import itineraryRoutes from './routes/itineraries';
 
@@ -19,6 +20,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/places', placesRoutes);
+app.use('/api/rentals', rentalsRoutes);
 app.use('/api/geocode', geocodeRoutes);
 app.use('/api/itineraries', itineraryRoutes);
 

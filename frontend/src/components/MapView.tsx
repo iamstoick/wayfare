@@ -10,7 +10,7 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import type { Place, DayPlan, Hotel } from '../services/api';
+import type { Place, DayPlan, Hotel, Rental } from '../services/api';
 
 // Fix default leaflet marker icon issue in Vite.
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -32,6 +32,7 @@ interface MapViewProps {
   places: Place[];
   days: DayPlan[];
   hotel: Hotel | null;
+  rentals?: Rental[];
 }
 
 function LocationMarker({ onPinSelect }: { onPinSelect: (lat: number, lng: number) => void }) {
@@ -70,6 +71,9 @@ const numberIcon = (n: number, color: string) =>
 const spotIcon = dotIcon('map-dot-spot');
 const restaurantIcon = dotIcon('map-dot-food');
 const hotelIcon = dotIcon('map-dot-hotel');
+const rentalIcon = dotIcon('map-dot-rental');
+
+const formatPeso = (n: number) => `₱${n.toLocaleString('en-PH')}`;
 
 export const MapView: React.FC<MapViewProps> = ({
   pinnedLocation,
@@ -77,6 +81,7 @@ export const MapView: React.FC<MapViewProps> = ({
   places,
   days,
   hotel,
+  rentals = [],
 }) => {
   const center = pinnedLocation || { lat: 14.5547, lng: 121.0244 }; // Default: Manila
 
@@ -129,6 +134,28 @@ export const MapView: React.FC<MapViewProps> = ({
             </Popup>
           </Marker>
         ))}
+
+      {rentals.map((rental) => (
+        <Marker
+          key={rental.osmId}
+          position={[rental.lat, rental.lng]}
+          icon={rentalIcon}
+        >
+          <Popup>
+            <strong>{rental.name}</strong>
+            <br />
+            Offers: {rental.vehicleTypes.map((t) => (t === 'car' ? 'Car' : 'Motorcycle')).join(' · ')}
+            <br />
+            {rental.estimates.map((e) => (
+              <React.Fragment key={e.vehicleType}>
+                {`≈ ${formatPeso(e.dailyMin)}–${formatPeso(e.dailyMax)} / day (${e.label})`}
+                <br />
+              </React.Fragment>
+            ))}
+            Distance: {rental.distanceKm} km
+          </Popup>
+        </Marker>
+      ))}
 
       {days.map((day) => {
         const color = DAY_COLORS[(day.dayIndex - 1) % DAY_COLORS.length];
